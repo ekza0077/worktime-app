@@ -1,0 +1,93 @@
+version: "3.9"
+
+# ======================================================================
+#  เวลางาน HR Attendance — Full Stack (n8n + PostgreSQL + Frontend)
+# ----------------------------------------------------------------------
+#  Usage:
+#    docker compose up -d
+#    Frontend  -> http://localhost:8080
+#    n8n UI    -> http://localhost:5678   (user: admin / pass: admin1234)
+#    Postgres  -> localhost:5432          (user: worktime / pass: worktime)
+# ======================================================================
+
+services:
+  # ------------------------------------------------------------------
+  # PostgreSQL — เก็บข้อมูลพนักงาน / การเข้างาน / แจ้งเตือน
+  # ------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: worktime_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: worktime
+      POSTGRES_PASSWORD: worktime
+      POSTGRES_DB: worktime
+      TZ: Asia/Bangkok
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U worktime -d worktime"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ------------------------------------------------------------------
+  # n8n — เครื่องมือ automation / API layer
+  # ------------------------------------------------------------------
+  n8n:
+    image: n8nio/n8n:1.73.1
+    container_name: worktime_n8n
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # --- Auth
+      N8N_BASIC_AUTH_ACTIVE: "true"
+      N8N_BASIC_AUTH_USER: admin
+      N8N_BASIC_AUTH_PASSWORD: admin1234
+      # --- Connection
+      N8N_HOST: localhost
+      N8N_PORT: 5678
+      N8N_PROTOCOL: http
+      WEBHOOK_URL: http://localhost:5678/
+      # --- Timezone
+      GENERIC_TIMEZONE: Asia/Bangkok
+      TZ: Asia/Bangkok
+      # --- Allow frontend (served on 8080) to call webhooks
+      N8N_CORS_ENABLE: "true"
+      N8N_CORS_ALLOW_ORIGIN: "*"
+      # --- DB info สำหรับ n8n เอง (ใช้ sqlite ก็พอ)
+      DB_TYPE: sqlite
+      # --- Default ENV ที่ workflow อ้างถึง สำหรับ connect Postgres
+      WORKTIME_PG_HOST: postgres
+      WORKTIME_PG_PORT: "5432"
+      WORKTIME_PG_DB: worktime
+      WORKTIME_PG_USER: worktime
+      WORKTIME_PG_PASS: worktime
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./n8n/workflows:/workflows:ro
+
+  # ------------------------------------------------------------------
+  # Frontend (nginx) — เสิร์ฟ HTML5 static
+  # ------------------------------------------------------------------
+  frontend:
+    image: nginx:alpine
+    container_name: worktime_web
+    restart: unless-stopped
+    depends_on:
+      - n8n
+    ports:
+      - "8080:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+
+volumes:
+  pg_data:
+  n8n_data:

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>เวลางาน — Daily Detail</title>
+<script src="assets/theme.js"></script>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Inter:wght@400;500;600&family=Anuphan:wght@400;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<style>
+  body { font-family:'Inter','IBM Plex Sans Thai',sans-serif; min-height:max(884px,100dvh); }
+  .headline-font { font-family:'Plus Jakarta Sans','Anuphan',sans-serif; }
+</style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen pb-32">
+<div id="wt-header"></div>
+
+<main class="px-6 pt-8 max-w-5xl mx-auto">
+  <!-- Date picker -->
+  <section class="flex items-center justify-between mb-8 bg-surface-container-low rounded-lg p-5">
+    <button id="prev-day" class="p-2 rounded-full hover:bg-surface-container-high">
+      <span class="material-symbols-outlined">chevron_left</span>
+    </button>
+    <div class="text-center">
+      <p class="text-xs uppercase tracking-widest font-bold text-on-surface-variant">วันที่</p>
+      <p class="headline-font text-2xl font-extrabold" id="date-label">—</p>
+      <input type="date" id="date-input" class="mt-1 text-xs text-primary bg-transparent border-0 cursor-pointer">
+    </div>
+    <button id="next-day" class="p-2 rounded-full hover:bg-surface-container-high">
+      <span class="material-symbols-outlined">chevron_right</span>
+    </button>
+  </section>
+
+  <!-- stat grid -->
+  <div id="stat-pills" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"></div>
+
+  <!-- filters -->
+  <div class="flex flex-wrap gap-2 mb-6" id="filter-pills">
+    <button data-f="all"    class="px-4 py-2 rounded-full bg-primary text-white text-sm font-bold">ทั้งหมด</button>
+    <button data-f="ok"     class="px-4 py-2 rounded-full bg-surface-container text-on-surface text-sm font-bold">มาปกติ</button>
+    <button data-f="late"   class="px-4 py-2 rounded-full bg-surface-container text-on-surface text-sm font-bold">มาสาย</button>
+    <button data-f="leave"  class="px-4 py-2 rounded-full bg-surface-container text-on-surface text-sm font-bold">ลางาน</button>
+    <button data-f="absent" class="px-4 py-2 rounded-full bg-surface-container text-on-surface text-sm font-bold">ขาดงาน</button>
+  </div>
+
+  <div id="records" class="space-y-3"></div>
+
+  <div id="empty" class="hidden flex-col items-center justify-center py-20 text-center">
+    <span class="material-symbols-outlined text-surface-container-highest text-7xl mb-4">search_off</span>
+    <p class="headline-font text-xl font-bold text-on-surface-variant">ไม่พบข้อมูลการเข้างาน</p>
+    <p class="text-on-surface-variant">ลองเปลี่ยนวันหรือตัวกรองใหม่อีกครั้ง</p>
+  </div>
+</main>
+
+<div id="wt-bottomnav"></div>
+
+<script src="assets/app.js"></script>
+<script src="assets/layout.js"></script>
+<script>
+  wtLayout.renderHeader();
+  wtLayout.renderBottomNav("daily");
+
+  let currentDate = new Date();
+  let currentFilter = "all";
+  let allRecords = [];
+
+  function updateDateLabel() {
+    document.getElementById("date-label").textContent = wt.fmtThaiDate(currentDate);
+    document.getElementById("date-input").value = wt.isoDate(currentDate);
+  }
+
+  function renderStats(d) {
+    const stats = [
+      { label: "มาปกติ",  value: d.ok_count     || 0, klass: "text-primary" },
+      { label: "มาสาย",   value: d.late_count   || 0, klass: "text-tertiary" },
+      { label: "ลางาน",   value: d.leave_count  || 0, klass: "text-secondary" },
+      { label: "ขาดงาน",  value: d.absent_count || 0, klass: "text-error" },
+    ];
+    document.getElementById("stat-pills").innerHTML = stats.map(s => `
+      <div class="bg-surface-container-lowest p-5 rounded-lg shadow-sm">
+        <p class="text-xs uppercase font-bold tracking-widest text-on-surface-variant mb-2">${s.label}</p>
+        <p class="headline-font text-3xl font-extrabold ${s.klass}">${s.value}</p>
+      </div>`).join("");
+  }
+
+  function renderRows() {
+    const rows = allRecords.filter(r => currentFilter === "all" || r.status === currentFilter);
+    const container = document.getElementById("records");
+    const empty = document.getElementById("empty");
+    if (!rows.length) { container.innerHTML = ""; empty.classList.remove("hidden"); empty.classList.add("flex"); return; }
+    empty.classList.add("hidden"); empty.classList.remove("flex");
+    container.innerHTML = rows.map(r => `
+      <div class="bg-surface-container-lowest p-4 rounded-lg flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <img class="w-12 h-12 rounded-full object-cover" src="${r.avatar_url || 'https://i.pravatar.cc/120'}" alt="">
+          <div>
+            <p class="font-bold">${r.full_name}</p>
+            <p class="text-xs text-on-surface-variant">${r.position || ''} · ${r.employee_code || ''}</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-6">
+          <div class="text-right hidden sm:block">
+            <p class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">เข้า / ออก</p>
+            <p class="headline-font font-bold">${wt.fmtTime(r.check_in)} · ${wt.fmtTime(r.check_out)}</p>
+          </div>
+          <div class="${wt.statusClass(r.status)} px-4 py-1.5 rounded-full text-xs font-bold">${wt.statusLabel(r.status)}</div>
+        </div>
+      </div>`).join("");
+  }
+
+  async function load() {
+    updateDateLabel();
+    document.getElementById("records").innerHTML = '<div class="h-24 bg-surface-container-low rounded-lg animate-pulse"></div>'.repeat(4);
+    try {
+      const data = await wt.api.dailySummary(wt.isoDate(currentDate));
+      renderStats(data);
+      allRecords = data.records || [];
+      renderRows();
+    } catch (e) {
+      wt.toast("โหลดข้อมูลไม่สำเร็จ: " + e.message, "error");
+      allRecords = [];
+      renderRows();
+    }
+  }
+
+  document.getElementById("prev-day").addEventListener("click", () => { currentDate.setDate(currentDate.getDate() - 1); load(); });
+  document.getElementById("next-day").addEventListener("click", () => { currentDate.setDate(currentDate.getDate() + 1); load(); });
+  document.getElementById("date-input").addEventListener("change", (e) => { currentDate = new Date(e.target.value); load(); });
+
+  document.getElementById("filter-pills").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-f]"); if (!b) return;
+    currentFilter = b.dataset.f;
+    [...e.currentTarget.querySelectorAll("button")].forEach(x => {
+      x.className = x === b
+        ? "px-4 py-2 rounded-full bg-primary text-white text-sm font-bold"
+        : "px-4 py-2 rounded-full bg-surface-container text-on-surface text-sm font-bold";
+    });
+    renderRows();
+  });
+
+  load();
+</script>
+</body>
+</html>

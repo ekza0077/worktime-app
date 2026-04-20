@@ -1,0 +1,161 @@
+{
+  "name": "Worktime — Photo Upload + AI Face Check",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "attendance/upload",
+        "responseMode": "responseNode",
+        "options": { "allowedOrigins": "*" }
+      },
+      "id": "wh-up",
+      "name": "Webhook / upload",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 200],
+      "webhookId": "wt-upload"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Simulated face-recognition step (swap for HuggingFace/OpenAI vision in production)\nconst body = $input.first().json.body || {};\nconst imgLen = (body.image_base64 || '').length;\n\n// rule: ถ้าภาพสั้นเกินไป => liveness ล้มเหลว + confidence ต่ำ\nlet confidence = 60 + Math.random() * 39; // 60-99%\nlet liveness_ok = imgLen > 500;\nif (imgLen < 200) { confidence = 20 + Math.random() * 20; liveness_ok = false; }\n\nconst status = (liveness_ok && confidence >= 80) ? 'matched' : (liveness_ok ? 'rejected' : 'liveness_failed');\n\nreturn [{ json: {\n  employee_id:     Number(body.employee_id) || null,\n  location:        body.location || '',\n  image_url:       body.image_url || null,\n  face_confidence: Math.round(confidence * 100) / 100,\n  liveness_ok,\n  status,\n  ai_result: {\n    model:       'stub-face-recognition-v1',\n    image_bytes: imgLen,\n    reason:      (status === 'matched' ? 'face matched' :\n                  status === 'rejected' ? 'confidence below threshold' :\n                                          'liveness check failed')\n  }\n}}];"
+      },
+      "id": "code-ai",
+      "name": "Simulate AI",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [420, 200]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO photo_uploads (employee_id, image_url, location, status, face_confidence, liveness_ok, ai_result)\nVALUES ($1::int, $2, $3, $4, $5::numeric, $6::boolean, $7::jsonb)\nRETURNING id, uploaded_at, status, face_confidence, liveness_ok, employee_id, location",
+        "options": {
+          "queryReplacement": "={{ $json.employee_id }}, {{ $json.image_url }}, {{ $json.location }}, {{ $json.status }}, {{ $json.face_confidence }}, {{ $json.liveness_ok }}, {{ JSON.stringify($json.ai_result) }}"
+        }
+      },
+      "id": "pg-ins",
+      "name": "Postgres insert upload",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [640, 200],
+      "credentials": { "postgres": { "id": "WorktimePg", "name": "Worktime Postgres" } }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ถ้าผ่านการยืนยัน => ลงเวลาเข้างานเป็น 'ok' ในตาราง attendance_records\nconst r = $input.first().json;\nr.should_checkin = (r.status === 'matched');\nreturn [{ json: r }];"
+      },
+      "id": "code-branch",
+      "name": "Decide check-in",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [840, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+          "combinator": "and",
+          "conditions": [
+            { "leftValue": "={{ $json.should_checkin }}", "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" } }
+          ]
+        }
+      },
+      "id": "if-checkin",
+      "name": "If matched",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1040, 200]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO attendance_records (employee_id, work_date, check_in, status)\nVALUES ($1::int, CURRENT_DATE, CURRENT_TIME, 'ok')\nON CONFLICT (employee_id, work_date)\nDO UPDATE SET check_in = COALESCE(attendance_records.check_in, EXCLUDED.check_in),\n              status   = CASE WHEN attendance_records.status='absent' THEN 'ok' ELSE attendance_records.status END\nRETURNING id",
+        "options": { "queryReplacement": "={{ $json.employee_id }}" }
+      },
+      "id": "pg-check",
+      "name": "Postgres mark attendance",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [1240, 120],
+      "credentials": { "postgres": { "id": "WorktimePg", "name": "Worktime Postgres" } }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $('Decide check-in').first().json }}",
+        "options": { "responseHeaders": { "entries": [ { "name": "Access-Control-Allow-Origin", "value": "*" } ] } }
+      },
+      "id": "resp-up",
+      "name": "Respond upload",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1440, 200]
+    },
+
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "attendance/upload/history",
+        "responseMode": "responseNode",
+        "options": { "allowedOrigins": "*" }
+      },
+      "id": "wh-hist",
+      "name": "Webhook / history",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 500],
+      "webhookId": "wt-upload-hist"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT p.id, p.uploaded_at, p.status, p.face_confidence, p.liveness_ok,\n       p.location, e.full_name, e.employee_code\nFROM photo_uploads p\nLEFT JOIN employees e ON e.id = p.employee_id\nORDER BY p.uploaded_at DESC\nLIMIT 50"
+      },
+      "id": "pg-hist",
+      "name": "Postgres history",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [460, 500],
+      "credentials": { "postgres": { "id": "WorktimePg", "name": "Worktime Postgres" } }
+    },
+    {
+      "parameters": { "jsCode": "return [{ json: items.map(i => i.json) }];" },
+      "id": "code-hist",
+      "name": "Pack history",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [640, 500]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": { "responseHeaders": { "entries": [ { "name": "Access-Control-Allow-Origin", "value": "*" } ] } }
+      },
+      "id": "resp-hist",
+      "name": "Respond history",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [840, 500]
+    }
+  ],
+  "connections": {
+    "Webhook / upload":          { "main": [ [ { "node": "Simulate AI",              "type": "main", "index": 0 } ] ] },
+    "Simulate AI":               { "main": [ [ { "node": "Postgres insert upload",   "type": "main", "index": 0 } ] ] },
+    "Postgres insert upload":    { "main": [ [ { "node": "Decide check-in",          "type": "main", "index": 0 } ] ] },
+    "Decide check-in":           { "main": [ [ { "node": "If matched",               "type": "main", "index": 0 } ] ] },
+    "If matched":                { "main": [
+      [ { "node": "Postgres mark attendance",  "type": "main", "index": 0 } ],
+      [ { "node": "Respond upload",            "type": "main", "index": 0 } ]
+    ] },
+    "Postgres mark attendance": { "main": [ [ { "node": "Respond upload",            "type": "main", "index": 0 } ] ] },
+
+    "Webhook / history": { "main": [ [ { "node": "Postgres history", "type": "main", "index": 0 } ] ] },
+    "Postgres history":  { "main": [ [ { "node": "Pack history",     "type": "main", "index": 0 } ] ] },
+    "Pack history":      { "main": [ [ { "node": "Respond history",  "type": "main", "index": 0 } ] ] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "worktime" }]
+}

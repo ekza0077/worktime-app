@@ -1,0 +1,11 @@
+# n8n temp files
+n8n/workflows/*_array.json
+n8n/workflows/*_fixed.json
+n8n/workflows/pg_cred.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

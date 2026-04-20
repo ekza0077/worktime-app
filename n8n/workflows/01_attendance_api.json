@@ -1,0 +1,252 @@
+{
+  "name": "Worktime — Attendance API (CRUD)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "attendance/daily",
+        "responseMode": "responseNode",
+        "options": { "allowedOrigins": "*" }
+      },
+      "id": "wh-daily",
+      "name": "Webhook / daily",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 200],
+      "webhookId": "wt-daily"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH d AS (\n  SELECT COALESCE($1::date, CURRENT_DATE) AS work_date\n)\nSELECT\n  (SELECT COUNT(*) FROM employees) AS total,\n  COALESCE(SUM(CASE WHEN a.status='ok'     THEN 1 ELSE 0 END), 0) AS ok_count,\n  COALESCE(SUM(CASE WHEN a.status='late'   THEN 1 ELSE 0 END), 0) AS late_count,\n  COALESCE(SUM(CASE WHEN a.status='absent' THEN 1 ELSE 0 END), 0) AS absent_count,\n  COALESCE(SUM(CASE WHEN a.status='leave'  THEN 1 ELSE 0 END), 0) AS leave_count,\n  (SELECT json_agg(row_to_json(x)) FROM (\n     SELECT e.id AS employee_id, e.employee_code, e.full_name, e.position, e.avatar_url,\n            a2.check_in, a2.check_out, COALESCE(a2.status, 'absent') AS status\n     FROM employees e\n     LEFT JOIN attendance_records a2\n            ON a2.employee_id = e.id\n           AND a2.work_date   = (SELECT work_date FROM d)\n     ORDER BY e.full_name\n   ) x) AS records\nFROM attendance_records a, d\nWHERE a.work_date = d.work_date",
+        "options": {
+          "queryReplacement": "={{ [$json.query?.date ?? null] }}"
+        }
+      },
+      "id": "pg-daily",
+      "name": "Postgres daily",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [460, 200],
+      "credentials": { "postgres": { "id": "WorktimePg", "name": "Worktime Postgres" } }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": { "responseHeaders": { "entries": [ { "name": "Access-Control-Allow-Origin", "value": "*" } ] } }
+      },
+      "id": "resp-daily",
+      "name": "Respond daily",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [720, 200]
+    },
+
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "attendance/monthly",
+        "responseMode": "responseNode",
+        "options": { "allowedOrigins": "*" }
+      },
+      "id": "wh-month",
+      "name": "Webhook / monthly",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 400],
+      "webhookId": "wt-month"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH p AS (\n  SELECT make_date(COALESCE($2::int, EXTRACT(YEAR FROM CURRENT_DATE)::int),\n                  COALESCE($1::int, EXTRACT(MONTH FROM CURRENT_DATE)::int),\n                  1) AS m0\n), m AS ( SELECT m0, (m0 + INTERVAL '1 month')::date AS m1 FROM p ),\nagg AS (\n  SELECT\n    COUNT(DISTINCT a.work_date) AS workdays,\n    (SELECT COUNT(*) FROM employees) AS employees,\n    SUM(CASE WHEN a.status IN ('ok','late') THEN 1 ELSE 0 END)::float /\n      NULLIF(COUNT(*), 0) * 100.0 AS rate,\n    SUM(CASE WHEN a.status='late' THEN 1 ELSE 0 END) AS late_total\n  FROM attendance_records a, m\n  WHERE a.work_date >= m.m0 AND a.work_date < m.m1\n)\nSELECT workdays, employees, ROUND(COALESCE(rate,0)::numeric, 1) AS attendance_rate, late_total FROM agg",
+        "options": {
+          "queryReplacement": "={{ $json.query.month }}, {{ $json.query.year }}"
+        }
+      },
+      "id": "pg-month",
+      "name": "Postgres monthly",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [460, 400],
+      "credentials": { "postgres": { "id": "WorktimePg", "name": "Worktime Postgres" } }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": { "responseHeaders": { "entries": [ { "name": "Access-Control-Allow-Origin", "value": "*" } ] } }
+      },
+      "id": "resp-month",
+      "name": "Respond monthly",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [720, 400]
+    },
+
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "attendance/monthly/employees",
+        "responseMode": "responseNode",
+        "options": { "allowedOrigins": "*" }
+      },
+      "id": "wh-monthemp",
+      "name": "Webhook / monthly/employees",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 600],
+      "webhookId": "wt-monthemp"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH p AS (\n  SELECT make_date(COALESCE($2::int, EXTRACT(YEAR FROM CURRENT_DATE)::int),\n                  COALESCE($1::int, EXTRACT(MONTH FROM CURRENT_DATE)::int),\n                  1) AS m0\n), m AS ( SELECT m0, (m0 + INTERVAL '1 month')::date AS m1 FROM p )\nSELECT e.id AS employee_id, e.employee_code, e.full_name, e.position, e.avatar_url,\n       e.monthly_goal_hours,\n       COUNT(*) FILTER (WHERE a.status IN ('ok','late')) AS work_days,\n       SUM(CASE WHEN a.status='late'   THEN 1 ELSE 0 END) AS late_times,\n       SUM(CASE WHEN a.status='leave'  THEN 1 ELSE 0 END) AS leave_days,\n       SUM(CASE WHEN a.status='absent' THEN 1 ELSE 0 END) AS absent_days,\n       ROUND(\n         SUM(\n           CASE WHEN a.check_in IS NOT NULL AND a.check_out IS NOT NULL\n                THEN EXTRACT(EPOCH FROM (a.check_out - a.check_in))/3600.0\n                ELSE 0 END\n         )::numeric, 1\n       ) AS total_hours\nFROM employees e\nLEFT JOIN attendance_records a\n  ON a.employee_id = e.id\n AND a.work_date   >= (SELECT m0 FROM m)\n AND a.work_date   <  (SELECT m1 FROM m)\nGROUP BY e.id\nORDER BY e.full_name",
+        "options": {
+          "queryReplacement": "={{ $json.query.month }}, {{ $json.query.year }}"
+        }
+      },
+      "id": "pg-monthemp",
+      "name": "Postgres monthly/employees",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [460, 600],
+      "credentials": { "postgres": { "id": "WorktimePg", "name": "Worktime Postgres" } }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: items.map(i => i.json) }];"
+      },
+      "id": "code-monthemp",
+      "name": "Pack array",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [620, 600]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": { "responseHeaders": { "entries": [ { "name": "Access-Control-Allow-Origin", "value": "*" } ] } }
+      },
+      "id": "resp-monthemp",
+      "name": "Respond monthly/employees",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [820, 600]
+    },
+
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "notifications",
+        "responseMode": "responseNode",
+        "options": { "allowedOrigins": "*" }
+      },
+      "id": "wh-notif",
+      "name": "Webhook / notifications",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 800],
+      "webhookId": "wt-notif"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT n.id, n.kind, n.title, n.message, n.state, n.created_at,\n       e.full_name, e.avatar_url\nFROM notifications n\nLEFT JOIN employees e ON e.id = n.employee_id\nORDER BY n.created_at DESC\nLIMIT 100"
+      },
+      "id": "pg-notif",
+      "name": "Postgres notifications",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [460, 800],
+      "credentials": { "postgres": { "id": "WorktimePg", "name": "Worktime Postgres" } }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: items.map(i => i.json) }];"
+      },
+      "id": "code-notif",
+      "name": "Pack array (notif)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [620, 800]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": { "responseHeaders": { "entries": [ { "name": "Access-Control-Allow-Origin", "value": "*" } ] } }
+      },
+      "id": "resp-notif",
+      "name": "Respond notifications",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [820, 800]
+    },
+
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "notifications/:id/action",
+        "responseMode": "responseNode",
+        "options": { "allowedOrigins": "*" }
+      },
+      "id": "wh-notif-act",
+      "name": "Webhook / notifications/:id/action",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 1000],
+      "webhookId": "wt-notif-act"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE notifications SET state = $2 WHERE id = $1 RETURNING id, state",
+        "options": {
+          "queryReplacement": "={{ $json.params.id }}, {{ $json.body.action }}"
+        }
+      },
+      "id": "pg-notif-act",
+      "name": "Postgres update notification",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [460, 1000],
+      "credentials": { "postgres": { "id": "WorktimePg", "name": "Worktime Postgres" } }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, id: $json.id, state: $json.state } }}",
+        "options": { "responseHeaders": { "entries": [ { "name": "Access-Control-Allow-Origin", "value": "*" } ] } }
+      },
+      "id": "resp-notif-act",
+      "name": "Respond notification action",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [720, 1000]
+    }
+  ],
+  "connections": {
+    "Webhook / daily":                  { "main": [ [ { "node": "Postgres daily",              "type": "main", "index": 0 } ] ] },
+    "Postgres daily":                   { "main": [ [ { "node": "Respond daily",               "type": "main", "index": 0 } ] ] },
+
+    "Webhook / monthly":                { "main": [ [ { "node": "Postgres monthly",            "type": "main", "index": 0 } ] ] },
+    "Postgres monthly":                 { "main": [ [ { "node": "Respond monthly",             "type": "main", "index": 0 } ] ] },
+
+    "Webhook / monthly/employees":      { "main": [ [ { "node": "Postgres monthly/employees",  "type": "main", "index": 0 } ] ] },
+    "Postgres monthly/employees":       { "main": [ [ { "node": "Pack array",                  "type": "main", "index": 0 } ] ] },
+    "Pack array":                       { "main": [ [ { "node": "Respond monthly/employees",   "type": "main", "index": 0 } ] ] },
+
+    "Webhook / notifications":          { "main": [ [ { "node": "Postgres notifications",      "type": "main", "index": 0 } ] ] },
+    "Postgres notifications":           { "main": [ [ { "node": "Pack array (notif)",          "type": "main", "index": 0 } ] ] },
+    "Pack array (notif)":               { "main": [ [ { "node": "Respond notifications",       "type": "main", "index": 0 } ] ] },
+
+    "Webhook / notifications/:id/action": { "main": [ [ { "node": "Postgres update notification", "type": "main", "index": 0 } ] ] },
+    "Postgres update notification":       { "main": [ [ { "node": "Respond notification action",   "type": "main", "index": 0 } ] ] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "worktime" }]
+}

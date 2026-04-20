@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>เวลางาน — Dashboard</title>
+<script src="assets/theme.js"></script>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Inter:wght@400;500;600&family=Anuphan:wght@400;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<style>
+  body { font-family: 'Inter','IBM Plex Sans Thai', sans-serif; min-height: max(884px, 100dvh); }
+  .headline-font { font-family: 'Plus Jakarta Sans','Anuphan', sans-serif; }
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400; }
+</style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen pb-32">
+
+<div id="wt-header"></div>
+
+<main class="px-6 pt-8 max-w-5xl mx-auto">
+
+  <!-- Hero -->
+  <section class="mb-10">
+    <h2 class="headline-font text-4xl font-extrabold mb-2">สรุปภาพรวมวันนี้</h2>
+    <p class="text-on-surface-variant font-medium" id="today-label">—</p>
+  </section>
+
+  <!-- Stat cards -->
+  <div id="stat-cards" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+    <!-- rendered by JS -->
+  </div>
+
+  <!-- Attendance recent list -->
+  <div class="bg-surface-container-low rounded-lg p-1">
+    <div class="flex justify-between items-end px-6 py-8">
+      <div>
+        <h3 class="headline-font text-2xl font-bold">รายชื่อการเข้างานล่าสุด</h3>
+        <p class="text-on-surface-variant text-sm mt-1">อัปเดตแบบเรียลไทม์จากระบบ</p>
+      </div>
+      <a href="daily.html" class="text-primary font-bold text-sm flex items-center gap-1 hover:underline">
+        ดูทั้งหมด <span class="material-symbols-outlined text-sm">chevron_right</span>
+      </a>
+    </div>
+    <div id="recent-list" class="space-y-4 px-4 pb-6"></div>
+  </div>
+
+  <!-- Bento: weekly insight + pending approvals -->
+  <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="md:col-span-2 bg-primary text-white p-8 rounded-lg relative overflow-hidden">
+      <h4 class="headline-font text-2xl font-bold mb-2">อัตราการเข้างานสัปดาห์นี้</h4>
+      <p class="text-on-primary-container text-sm mb-6" id="weekly-caption">กำลังโหลด…</p>
+      <div class="flex items-end gap-2 h-32" id="weekly-bars"></div>
+    </div>
+    <div class="bg-secondary-container text-on-secondary-container p-8 rounded-lg flex flex-col justify-between">
+      <div>
+        <h4 class="headline-font text-xl font-bold">รอการอนุมัติ</h4>
+        <p class="text-sm opacity-80" id="pending-caption">—</p>
+      </div>
+      <a href="notifications.html" class="mt-4 w-full bg-on-secondary-container text-secondary-container py-3 rounded-full font-bold text-center active:scale-95 transition-all">ตรวจสอบเลย</a>
+    </div>
+  </div>
+
+  <!-- Error overlay -->
+  <div id="error-overlay" class="hidden fixed inset-0 z-[60] bg-white/95 flex items-center justify-center p-10 text-center">
+    <div>
+      <span class="material-symbols-outlined text-error text-8xl mb-6">cloud_off</span>
+      <h2 class="headline-font text-3xl font-extrabold mb-2">ไม่สามารถเชื่อมต่อ n8n</h2>
+      <p class="text-on-surface-variant max-w-sm mx-auto mb-8" id="error-msg"></p>
+      <button onclick="location.reload()" class="bg-primary text-white px-10 py-4 rounded-full font-bold">ลองใหม่อีกครั้ง</button>
+    </div>
+  </div>
+</main>
+
+<div id="wt-bottomnav"></div>
+
+<script src="assets/app.js"></script>
+<script src="assets/layout.js"></script>
+<script>
+  wtLayout.renderHeader();
+  wtLayout.renderBottomNav("home");
+
+  const todayIso = wt.isoDate(new Date());
+  document.getElementById("today-label").textContent = wt.fmtThaiDate(new Date());
+
+  function renderSkeletonRows(n=3) {
+    const out = [];
+    for (let i=0;i<n;i++) out.push(`
+      <div class="bg-surface-container-lowest/60 p-4 rounded-lg flex items-center justify-between animate-pulse">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-full bg-surface-container-high"></div>
+          <div class="space-y-2">
+            <div class="h-4 w-32 bg-surface-container-high rounded"></div>
+            <div class="h-3 w-20 bg-surface-container-high rounded"></div>
+          </div>
+        </div>
+        <div class="h-7 w-20 bg-surface-container-high rounded-full"></div>
+      </div>`);
+    return out.join("");
+  }
+  document.getElementById("recent-list").innerHTML = renderSkeletonRows();
+
+  async function load() {
+    try {
+      const data = await wt.api.dailySummary(todayIso);
+      // stat cards
+      const cards = [
+        { icon: "group",      label: "พนักงานทั้งหมด",   value: data.total ?? 0,        klass: "text-primary"   },
+        { icon: "how_to_reg", label: "ลงชื่อเข้างานแล้ว", value: (data.ok_count ?? 0) + (data.late_count ?? 0), klass: "text-secondary" },
+        { icon: "timer",      label: "มาสาย",             value: data.late_count ?? 0,   klass: "text-tertiary"  },
+        { icon: "person_off", label: "ยังไม่เข้างาน",     value: (data.absent_count ?? 0) + (data.leave_count ?? 0), klass: "text-error", border: true },
+      ];
+      document.getElementById("stat-cards").innerHTML = cards.map(c => `
+        <div class="bg-surface-container-lowest p-6 rounded-lg shadow-sm flex flex-col justify-between aspect-square md:aspect-auto ${c.border ? 'border-l-4 border-error' : ''}">
+          <span class="material-symbols-outlined ${c.klass} text-3xl mb-4">${c.icon}</span>
+          <div>
+            <p class="text-xs uppercase font-bold tracking-widest text-on-surface-variant mb-1">${c.label}</p>
+            <p class="headline-font text-3xl font-bold ${c.klass}">${c.value}</p>
+          </div>
+        </div>`).join("");
+
+      // recent list
+      const rows = (data.records || []).slice(0, 5);
+      document.getElementById("recent-list").innerHTML = rows.length ? rows.map(r => `
+        <div class="bg-surface-container-lowest p-4 rounded-lg flex items-center justify-between hover:scale-[1.01] transition-transform duration-300">
+          <div class="flex items-center gap-4">
+            <img class="w-12 h-12 rounded-full object-cover" src="${r.avatar_url || 'https://i.pravatar.cc/120'}" alt="">
+            <div>
+              <p class="font-bold">${r.full_name}</p>
+              <p class="text-xs text-on-surface-variant">${r.position || ''}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-8">
+            <div class="text-right hidden sm:block">
+              <p class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">เข้างาน</p>
+              <p class="headline-font font-bold">${wt.fmtTime(r.check_in)}</p>
+            </div>
+            <div class="${wt.statusClass(r.status)} px-4 py-1.5 rounded-full text-xs font-bold">${wt.statusLabel(r.status)}</div>
+          </div>
+        </div>`).join("") : `
+        <div class="flex flex-col items-center justify-center py-16 text-center">
+          <span class="material-symbols-outlined text-surface-container-highest text-6xl mb-4">search_off</span>
+          <p class="headline-font text-lg font-bold text-on-surface-variant">ยังไม่มีข้อมูลการเข้างานวันนี้</p>
+        </div>`;
+
+      // weekly bars (mock: use ratio from stat)
+      const okRate = data.total ? Math.round(((data.ok_count||0)+(data.late_count||0))*100/data.total) : 0;
+      document.getElementById("weekly-caption").textContent = `อัตราเข้างานวันนี้ ${okRate}%`;
+      const bars = [60,80,40,95,70,100, okRate].map(v => `<div class="w-full bg-white/40 rounded-t-lg" style="height:${v}%"></div>`);
+      document.getElementById("weekly-bars").innerHTML = bars.join("");
+
+      // pending approvals caption
+      try {
+        const notif = await wt.api.notifications();
+        const pending = (notif || []).filter(n => n.state === "pending").length;
+        document.getElementById("pending-caption").textContent = `มี ${pending} รายการที่รอดำเนินการ`;
+      } catch(_) {
+        document.getElementById("pending-caption").textContent = "—";
+      }
+    } catch (e) {
+      console.error(e);
+      document.getElementById("error-msg").textContent = `${e.message}  (${wt.WT_BASE})`;
+      document.getElementById("error-overlay").classList.remove("hidden");
+    }
+  }
+  load();
+</script>
+</body>
+</html>
