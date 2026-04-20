@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="th">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>เวลางาน — Dashboard</title>
+<title>เน€เธงเธฅเธฒเธเธฒเธ โ€” Dashboard</title>
 <script src="assets/theme.js"></script>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Inter:wght@400;500;600&family=Anuphan:wght@400;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
@@ -22,8 +22,8 @@
 
   <!-- Hero -->
   <section class="mb-10">
-    <h2 class="headline-font text-4xl font-extrabold mb-2">สรุปภาพรวมวันนี้</h2>
-    <p class="text-on-surface-variant font-medium" id="today-label">—</p>
+    <h2 class="headline-font text-4xl font-extrabold mb-2">เธชเธฃเธธเธเธ เธฒเธเธฃเธงเธกเธงเธฑเธเธเธตเน</h2>
+    <p class="text-on-surface-variant font-medium" id="today-label">โ€”</p>
   </section>
 
   <!-- Stat cards -->
@@ -35,11 +35,11 @@
   <div class="bg-surface-container-low rounded-lg p-1">
     <div class="flex justify-between items-end px-6 py-8">
       <div>
-        <h3 class="headline-font text-2xl font-bold">รายชื่อการเข้างานล่าสุด</h3>
-        <p class="text-on-surface-variant text-sm mt-1">อัปเดตแบบเรียลไทม์จากระบบ</p>
+        <h3 class="headline-font text-2xl font-bold">เธฃเธฒเธขเธเธทเนเธญเธเธฒเธฃเน€เธเนเธฒเธเธฒเธเธฅเนเธฒเธชเธธเธ”</h3>
+        <p class="text-on-surface-variant text-sm mt-1">เธญเธฑเธเน€เธ”เธ•เนเธเธเน€เธฃเธตเธขเธฅเนเธ—เธกเนเธเธฒเธเธฃเธฐเธเธ</p>
       </div>
       <a href="daily.html" class="text-primary font-bold text-sm flex items-center gap-1 hover:underline">
-        ดูทั้งหมด <span class="material-symbols-outlined text-sm">chevron_right</span>
+        เธ”เธนเธ—เธฑเนเธเธซเธกเธ” <span class="material-symbols-outlined text-sm">chevron_right</span>
       </a>
     </div>
     <div id="recent-list" class="space-y-4 px-4 pb-6"></div>
@@ -48,16 +48,16 @@
   <!-- Bento: weekly insight + pending approvals -->
   <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
     <div class="md:col-span-2 bg-primary text-white p-8 rounded-lg relative overflow-hidden">
-      <h4 class="headline-font text-2xl font-bold mb-2">อัตราการเข้างานสัปดาห์นี้</h4>
-      <p class="text-on-primary-container text-sm mb-6" id="weekly-caption">กำลังโหลด…</p>
+      <h4 class="headline-font text-2xl font-bold mb-2">เธญเธฑเธ•เธฃเธฒเธเธฒเธฃเน€เธเนเธฒเธเธฒเธเธชเธฑเธเธ”เธฒเธซเนเธเธตเน</h4>
+      <p class="text-on-primary-container text-sm mb-6" id="weekly-caption">เธเธณเธฅเธฑเธเนเธซเธฅเธ”โ€ฆ</p>
       <div class="flex items-end gap-2 h-32" id="weekly-bars"></div>
     </div>
     <div class="bg-secondary-container text-on-secondary-container p-8 rounded-lg flex flex-col justify-between">
       <div>
-        <h4 class="headline-font text-xl font-bold">รอการอนุมัติ</h4>
-        <p class="text-sm opacity-80" id="pending-caption">—</p>
+        <h4 class="headline-font text-xl font-bold">เธฃเธญเธเธฒเธฃเธญเธเธธเธกเธฑเธ•เธด</h4>
+        <p class="text-sm opacity-80" id="pending-caption">โ€”</p>
       </div>
-      <a href="notifications.html" class="mt-4 w-full bg-on-secondary-container text-secondary-container py-3 rounded-full font-bold text-center active:scale-95 transition-all">ตรวจสอบเลย</a>
+      <a href="notifications.html" class="mt-4 w-full bg-on-secondary-container text-secondary-container py-3 rounded-full font-bold text-center active:scale-95 transition-all">เธ•เธฃเธงเธเธชเธญเธเน€เธฅเธข</a>
     </div>
   </div>
 
@@ -65,15 +65,16 @@
   <div id="error-overlay" class="hidden fixed inset-0 z-[60] bg-white/95 flex items-center justify-center p-10 text-center">
     <div>
       <span class="material-symbols-outlined text-error text-8xl mb-6">cloud_off</span>
-      <h2 class="headline-font text-3xl font-extrabold mb-2">ไม่สามารถเชื่อมต่อ n8n</h2>
+      <h2 class="headline-font text-3xl font-extrabold mb-2">เนเธกเนเธชเธฒเธกเธฒเธฃเธ–เน€เธเธทเนเธญเธกเธ•เนเธญ n8n</h2>
       <p class="text-on-surface-variant max-w-sm mx-auto mb-8" id="error-msg"></p>
-      <button onclick="location.reload()" class="bg-primary text-white px-10 py-4 rounded-full font-bold">ลองใหม่อีกครั้ง</button>
+      <button onclick="location.reload()" class="bg-primary text-white px-10 py-4 rounded-full font-bold">เธฅเธญเธเนเธซเธกเนเธญเธตเธเธเธฃเธฑเนเธ</button>
     </div>
   </div>
 </main>
 
 <div id="wt-bottomnav"></div>
 
+<script src="/config.js"></script>
 <script src="assets/app.js"></script>
 <script src="assets/layout.js"></script>
 <script>
@@ -105,10 +106,10 @@
       const data = await wt.api.dailySummary(todayIso);
       // stat cards
       const cards = [
-        { icon: "group",      label: "พนักงานทั้งหมด",   value: data.total ?? 0,        klass: "text-primary"   },
-        { icon: "how_to_reg", label: "ลงชื่อเข้างานแล้ว", value: (data.ok_count ?? 0) + (data.late_count ?? 0), klass: "text-secondary" },
-        { icon: "timer",      label: "มาสาย",             value: data.late_count ?? 0,   klass: "text-tertiary"  },
-        { icon: "person_off", label: "ยังไม่เข้างาน",     value: (data.absent_count ?? 0) + (data.leave_count ?? 0), klass: "text-error", border: true },
+        { icon: "group",      label: "เธเธเธฑเธเธเธฒเธเธ—เธฑเนเธเธซเธกเธ”",   value: data.total ?? 0,        klass: "text-primary"   },
+        { icon: "how_to_reg", label: "เธฅเธเธเธทเนเธญเน€เธเนเธฒเธเธฒเธเนเธฅเนเธง", value: (data.ok_count ?? 0) + (data.late_count ?? 0), klass: "text-secondary" },
+        { icon: "timer",      label: "เธกเธฒเธชเธฒเธข",             value: data.late_count ?? 0,   klass: "text-tertiary"  },
+        { icon: "person_off", label: "เธขเธฑเธเนเธกเนเน€เธเนเธฒเธเธฒเธ",     value: (data.absent_count ?? 0) + (data.leave_count ?? 0), klass: "text-error", border: true },
       ];
       document.getElementById("stat-cards").innerHTML = cards.map(c => `
         <div class="bg-surface-container-lowest p-6 rounded-lg shadow-sm flex flex-col justify-between aspect-square md:aspect-auto ${c.border ? 'border-l-4 border-error' : ''}">
@@ -132,7 +133,7 @@
           </div>
           <div class="flex items-center gap-8">
             <div class="text-right hidden sm:block">
-              <p class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">เข้างาน</p>
+              <p class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">เน€เธเนเธฒเธเธฒเธ</p>
               <p class="headline-font font-bold">${wt.fmtTime(r.check_in)}</p>
             </div>
             <div class="${wt.statusClass(r.status)} px-4 py-1.5 rounded-full text-xs font-bold">${wt.statusLabel(r.status)}</div>
@@ -140,12 +141,12 @@
         </div>`).join("") : `
         <div class="flex flex-col items-center justify-center py-16 text-center">
           <span class="material-symbols-outlined text-surface-container-highest text-6xl mb-4">search_off</span>
-          <p class="headline-font text-lg font-bold text-on-surface-variant">ยังไม่มีข้อมูลการเข้างานวันนี้</p>
+          <p class="headline-font text-lg font-bold text-on-surface-variant">เธขเธฑเธเนเธกเนเธกเธตเธเนเธญเธกเธนเธฅเธเธฒเธฃเน€เธเนเธฒเธเธฒเธเธงเธฑเธเธเธตเน</p>
         </div>`;
 
       // weekly bars (mock: use ratio from stat)
       const okRate = data.total ? Math.round(((data.ok_count||0)+(data.late_count||0))*100/data.total) : 0;
-      document.getElementById("weekly-caption").textContent = `อัตราเข้างานวันนี้ ${okRate}%`;
+      document.getElementById("weekly-caption").textContent = `เธญเธฑเธ•เธฃเธฒเน€เธเนเธฒเธเธฒเธเธงเธฑเธเธเธตเน ${okRate}%`;
       const bars = [60,80,40,95,70,100, okRate].map(v => `<div class="w-full bg-white/40 rounded-t-lg" style="height:${v}%"></div>`);
       document.getElementById("weekly-bars").innerHTML = bars.join("");
 
@@ -153,9 +154,9 @@
       try {
         const notif = await wt.api.notifications();
         const pending = (notif || []).filter(n => n.state === "pending").length;
-        document.getElementById("pending-caption").textContent = `มี ${pending} รายการที่รอดำเนินการ`;
+        document.getElementById("pending-caption").textContent = `เธกเธต ${pending} เธฃเธฒเธขเธเธฒเธฃเธ—เธตเนเธฃเธญเธ”เธณเน€เธเธดเธเธเธฒเธฃ`;
       } catch(_) {
-        document.getElementById("pending-caption").textContent = "—";
+        document.getElementById("pending-caption").textContent = "โ€”";
       }
     } catch (e) {
       console.error(e);

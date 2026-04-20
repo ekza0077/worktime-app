@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="th">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>เวลางาน — Notifications</title>
+<title>เน€เธงเธฅเธฒเธเธฒเธ โ€” Notifications</title>
 <script src="assets/theme.js"></script>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Inter:wght@400;500;600&family=Anuphan:wght@400;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
@@ -18,8 +18,8 @@
 
 <main class="px-6 pt-8 max-w-3xl mx-auto">
   <section class="mb-8">
-    <h2 class="headline-font text-4xl font-extrabold mb-2">การแจ้งเตือน</h2>
-    <p class="text-on-surface-variant font-medium" id="summary">—</p>
+    <h2 class="headline-font text-4xl font-extrabold mb-2">เธเธฒเธฃเนเธเนเธเน€เธ•เธทเธญเธ</h2>
+    <p class="text-on-surface-variant font-medium" id="summary">โ€”</p>
   </section>
 
   <section id="groups" class="space-y-10"></section>
@@ -27,12 +27,13 @@
   <!-- empty state -->
   <div id="empty" class="hidden flex-col items-center justify-center py-20 text-center">
     <span class="material-symbols-outlined text-surface-container-highest text-7xl mb-4">notifications_off</span>
-    <p class="headline-font text-xl font-bold text-on-surface-variant">ไม่มีการแจ้งเตือน</p>
+    <p class="headline-font text-xl font-bold text-on-surface-variant">เนเธกเนเธกเธตเธเธฒเธฃเนเธเนเธเน€เธ•เธทเธญเธ</p>
   </div>
 </main>
 
 <div id="wt-bottomnav"></div>
 
+<script src="/config.js"></script>
 <script src="assets/app.js"></script>
 <script src="assets/layout.js"></script>
 <script>
@@ -85,8 +86,8 @@
           </div>
           ${actionable ? `
             <div class="flex gap-2 mt-3">
-              <button data-act="approved" class="px-4 py-2 rounded-full bg-primary text-white text-sm font-bold">อนุมัติ</button>
-              <button data-act="rejected" class="px-4 py-2 rounded-full bg-surface-container text-on-surface text-sm font-bold">ปฏิเสธ</button>
+              <button data-act="approved" class="px-4 py-2 rounded-full bg-primary text-white text-sm font-bold">เธญเธเธธเธกเธฑเธ•เธด</button>
+              <button data-act="rejected" class="px-4 py-2 rounded-full bg-surface-container text-on-surface text-sm font-bold">เธเธเธดเน€เธชเธ</button>
             </div>` : ''}
         </div>
       </div>`;
@@ -99,8 +100,8 @@
       const items = await wt.api.notifications();
       document.getElementById("summary").textContent =
         items && items.length
-          ? `ทั้งหมด ${items.length} รายการ · รอดำเนินการ ${items.filter(x=>x.state==='pending').length} รายการ`
-          : "ไม่มีรายการ";
+          ? `เธ—เธฑเนเธเธซเธกเธ” ${items.length} เธฃเธฒเธขเธเธฒเธฃ ยท เธฃเธญเธ”เธณเน€เธเธดเธเธเธฒเธฃ ${items.filter(x=>x.state==='pending').length} เธฃเธฒเธขเธเธฒเธฃ`
+          : "เนเธกเนเธกเธตเธฃเธฒเธขเธเธฒเธฃ";
 
       if (!items || !items.length) {
         root.innerHTML = "";
@@ -115,11 +116,11 @@
           <h3 class="headline-font text-lg font-bold mb-3">${title}</h3>
           <div class="space-y-3">${arr.map(cardHtml).join("")}</div>
         </section>` : "";
-      root.innerHTML = block("วันนี้", g.today) + block("เมื่อวาน", g.yesterday) + block("ก่อนหน้า", g.older);
+      root.innerHTML = block("เธงเธฑเธเธเธตเน", g.today) + block("เน€เธกเธทเนเธญเธงเธฒเธ", g.yesterday) + block("เธเนเธญเธเธซเธเนเธฒ", g.older);
     } catch (e) {
       root.innerHTML = `
         <div class="bg-error-container text-on-error-container p-5 rounded-lg">
-          <p class="font-bold">โหลดไม่สำเร็จ</p>
+          <p class="font-bold">เนเธซเธฅเธ”เนเธกเนเธชเธณเน€เธฃเนเธ</p>
           <p class="text-sm">${e.message}</p>
         </div>`;
     }
@@ -128,12 +129,12 @@
   document.getElementById("groups").addEventListener("click", async (e) => {
     const btn = e.target.closest("button[data-act]"); if (!btn) return;
     const card = btn.closest("[data-id]"); const id = Number(card.dataset.id); const act = btn.dataset.act;
-    btn.disabled = true; btn.textContent = "…";
+    btn.disabled = true; btn.textContent = "โ€ฆ";
     try {
       await wt.api.notificationAction(id, act);
-      wt.toast("บันทึกการตัดสินใจแล้ว", "success");
+      wt.toast("เธเธฑเธเธ—เธถเธเธเธฒเธฃเธ•เธฑเธ”เธชเธดเธเนเธเนเธฅเนเธง", "success");
       load();
-    } catch (err) { wt.toast("ไม่สำเร็จ: " + err.message, "error"); btn.disabled = false; }
+    } catch (err) { wt.toast("เนเธกเนเธชเธณเน€เธฃเนเธ: " + err.message, "error"); btn.disabled = false; }
   });
 
   load();

@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="th">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>เวลางาน — Daily Detail</title>
+<title>เน€เธงเธฅเธฒเธเธฒเธ โ€” Daily Detail</title>
 <script src="assets/theme.js"></script>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Inter:wght@400;500;600&family=Anuphan:wght@400;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
@@ -23,8 +23,8 @@
       <span class="material-symbols-outlined">chevron_left</span>
     </button>
     <div class="text-center">
-      <p class="text-xs uppercase tracking-widest font-bold text-on-surface-variant">วันที่</p>
-      <p class="headline-font text-2xl font-extrabold" id="date-label">—</p>
+      <p class="text-xs uppercase tracking-widest font-bold text-on-surface-variant">เธงเธฑเธเธ—เธตเน</p>
+      <p class="headline-font text-2xl font-extrabold" id="date-label">โ€”</p>
       <input type="date" id="date-input" class="mt-1 text-xs text-primary bg-transparent border-0 cursor-pointer">
     </div>
     <button id="next-day" class="p-2 rounded-full hover:bg-surface-container-high">
@@ -37,24 +37,25 @@
 
   <!-- filters -->
   <div class="flex flex-wrap gap-2 mb-6" id="filter-pills">
-    <button data-f="all"    class="px-4 py-2 rounded-full bg-primary text-white text-sm font-bold">ทั้งหมด</button>
-    <button data-f="ok"     class="px-4 py-2 rounded-full bg-surface-container text-on-surface text-sm font-bold">มาปกติ</button>
-    <button data-f="late"   class="px-4 py-2 rounded-full bg-surface-container text-on-surface text-sm font-bold">มาสาย</button>
-    <button data-f="leave"  class="px-4 py-2 rounded-full bg-surface-container text-on-surface text-sm font-bold">ลางาน</button>
-    <button data-f="absent" class="px-4 py-2 rounded-full bg-surface-container text-on-surface text-sm font-bold">ขาดงาน</button>
+    <button data-f="all"    class="px-4 py-2 rounded-full bg-primary text-white text-sm font-bold">เธ—เธฑเนเธเธซเธกเธ”</button>
+    <button data-f="ok"     class="px-4 py-2 rounded-full bg-surface-container text-on-surface text-sm font-bold">เธกเธฒเธเธเธ•เธด</button>
+    <button data-f="late"   class="px-4 py-2 rounded-full bg-surface-container text-on-surface text-sm font-bold">เธกเธฒเธชเธฒเธข</button>
+    <button data-f="leave"  class="px-4 py-2 rounded-full bg-surface-container text-on-surface text-sm font-bold">เธฅเธฒเธเธฒเธ</button>
+    <button data-f="absent" class="px-4 py-2 rounded-full bg-surface-container text-on-surface text-sm font-bold">เธเธฒเธ”เธเธฒเธ</button>
   </div>
 
   <div id="records" class="space-y-3"></div>
 
   <div id="empty" class="hidden flex-col items-center justify-center py-20 text-center">
     <span class="material-symbols-outlined text-surface-container-highest text-7xl mb-4">search_off</span>
-    <p class="headline-font text-xl font-bold text-on-surface-variant">ไม่พบข้อมูลการเข้างาน</p>
-    <p class="text-on-surface-variant">ลองเปลี่ยนวันหรือตัวกรองใหม่อีกครั้ง</p>
+    <p class="headline-font text-xl font-bold text-on-surface-variant">เนเธกเนเธเธเธเนเธญเธกเธนเธฅเธเธฒเธฃเน€เธเนเธฒเธเธฒเธ</p>
+    <p class="text-on-surface-variant">เธฅเธญเธเน€เธเธฅเธตเนเธขเธเธงเธฑเธเธซเธฃเธทเธญเธ•เธฑเธงเธเธฃเธญเธเนเธซเธกเนเธญเธตเธเธเธฃเธฑเนเธ</p>
   </div>
 </main>
 
 <div id="wt-bottomnav"></div>
 
+<script src="/config.js"></script>
 <script src="assets/app.js"></script>
 <script src="assets/layout.js"></script>
 <script>
@@ -72,10 +73,10 @@
 
   function renderStats(d) {
     const stats = [
-      { label: "มาปกติ",  value: d.ok_count     || 0, klass: "text-primary" },
-      { label: "มาสาย",   value: d.late_count   || 0, klass: "text-tertiary" },
-      { label: "ลางาน",   value: d.leave_count  || 0, klass: "text-secondary" },
-      { label: "ขาดงาน",  value: d.absent_count || 0, klass: "text-error" },
+      { label: "เธกเธฒเธเธเธ•เธด",  value: d.ok_count     || 0, klass: "text-primary" },
+      { label: "เธกเธฒเธชเธฒเธข",   value: d.late_count   || 0, klass: "text-tertiary" },
+      { label: "เธฅเธฒเธเธฒเธ",   value: d.leave_count  || 0, klass: "text-secondary" },
+      { label: "เธเธฒเธ”เธเธฒเธ",  value: d.absent_count || 0, klass: "text-error" },
     ];
     document.getElementById("stat-pills").innerHTML = stats.map(s => `
       <div class="bg-surface-container-lowest p-5 rounded-lg shadow-sm">
@@ -96,13 +97,13 @@
           <img class="w-12 h-12 rounded-full object-cover" src="${r.avatar_url || 'https://i.pravatar.cc/120'}" alt="">
           <div>
             <p class="font-bold">${r.full_name}</p>
-            <p class="text-xs text-on-surface-variant">${r.position || ''} · ${r.employee_code || ''}</p>
+            <p class="text-xs text-on-surface-variant">${r.position || ''} ยท ${r.employee_code || ''}</p>
           </div>
         </div>
         <div class="flex items-center gap-6">
           <div class="text-right hidden sm:block">
-            <p class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">เข้า / ออก</p>
-            <p class="headline-font font-bold">${wt.fmtTime(r.check_in)} · ${wt.fmtTime(r.check_out)}</p>
+            <p class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">เน€เธเนเธฒ / เธญเธญเธ</p>
+            <p class="headline-font font-bold">${wt.fmtTime(r.check_in)} ยท ${wt.fmtTime(r.check_out)}</p>
           </div>
           <div class="${wt.statusClass(r.status)} px-4 py-1.5 rounded-full text-xs font-bold">${wt.statusLabel(r.status)}</div>
         </div>
@@ -118,7 +119,7 @@
       allRecords = data.records || [];
       renderRows();
     } catch (e) {
-      wt.toast("โหลดข้อมูลไม่สำเร็จ: " + e.message, "error");
+      wt.toast("เนเธซเธฅเธ”เธเนเธญเธกเธนเธฅเนเธกเนเธชเธณเน€เธฃเนเธ: " + e.message, "error");
       allRecords = [];
       renderRows();
     }

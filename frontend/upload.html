@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="th">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>เวลางาน — Photo Upload (AI)</title>
+<title>เน€เธงเธฅเธฒเธเธฒเธ โ€” Photo Upload (AI)</title>
 <script src="assets/theme.js"></script>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Inter:wght@400;500;600&family=Anuphan:wght@400;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
@@ -18,27 +18,27 @@
 
 <main class="px-6 pt-8 max-w-3xl mx-auto">
   <section class="mb-8">
-    <h2 class="headline-font text-4xl font-extrabold mb-2">บันทึกการเข้างาน</h2>
-    <p class="text-on-surface-variant">ส่งรูปภาพเพื่อยืนยันตัวตนผ่านระบบ AI</p>
+    <h2 class="headline-font text-4xl font-extrabold mb-2">เธเธฑเธเธ—เธถเธเธเธฒเธฃเน€เธเนเธฒเธเธฒเธ</h2>
+    <p class="text-on-surface-variant">เธชเนเธเธฃเธนเธเธ เธฒเธเน€เธเธทเนเธญเธขเธทเธเธขเธฑเธเธ•เธฑเธงเธ•เธเธเนเธฒเธเธฃเธฐเธเธ AI</p>
   </section>
 
   <!-- Uploader -->
   <section class="bg-surface-container-lowest rounded-lg p-8 shadow-sm mb-8">
     <form id="upload-form" class="space-y-5">
       <div>
-        <label class="block text-sm font-bold mb-2">พนักงาน</label>
+        <label class="block text-sm font-bold mb-2">เธเธเธฑเธเธเธฒเธ</label>
         <select id="employee" class="w-full rounded-lg border-outline-variant bg-surface-container-low py-3 px-4 text-base">
-          <option value="">— กำลังโหลด —</option>
+          <option value="">โ€” เธเธณเธฅเธฑเธเนเธซเธฅเธ” โ€”</option>
         </select>
       </div>
 
       <div>
-        <label class="block text-sm font-bold mb-2">สถานที่</label>
-        <input id="location" type="text" value="สำนักงานใหญ่ ชั้น 5" class="w-full rounded-lg border-outline-variant bg-surface-container-low py-3 px-4 text-base">
+        <label class="block text-sm font-bold mb-2">เธชเธ–เธฒเธเธ—เธตเน</label>
+        <input id="location" type="text" value="เธชเธณเธเธฑเธเธเธฒเธเนเธซเธเน เธเธฑเนเธ 5" class="w-full rounded-lg border-outline-variant bg-surface-container-low py-3 px-4 text-base">
       </div>
 
       <div>
-        <label class="block text-sm font-bold mb-2">รูปภาพเซลฟี่ (Upload)</label>
+        <label class="block text-sm font-bold mb-2">เธฃเธนเธเธ เธฒเธเน€เธเธฅเธเธตเน (Upload)</label>
         <input id="photo" type="file" accept="image/*"
                class="w-full file:bg-primary file:text-white file:font-bold file:py-3 file:px-5 file:rounded-full file:border-0 file:mr-4 py-2">
         <div id="preview" class="mt-4 hidden">
@@ -47,10 +47,10 @@
       </div>
 
       <div class="flex gap-3 pt-2">
-        <button type="button" id="btn-cancel" class="flex-1 py-4 rounded-full bg-surface-container text-on-surface font-bold">ยกเลิก</button>
+        <button type="button" id="btn-cancel" class="flex-1 py-4 rounded-full bg-surface-container text-on-surface font-bold">เธขเธเน€เธฅเธดเธ</button>
         <button type="submit" class="flex-1 py-4 rounded-full bg-primary text-white font-bold flex items-center justify-center gap-2">
           <span class="material-symbols-outlined">cloud_upload</span>
-          <span>ยืนยันการส่ง</span>
+          <span>เธขเธทเธเธขเธฑเธเธเธฒเธฃเธชเนเธ</span>
         </button>
       </div>
     </form>
@@ -58,19 +58,20 @@
 
   <!-- AI Result -->
   <section id="result-card" class="hidden bg-surface-container-lowest rounded-lg p-8 shadow-sm mb-8">
-    <h3 class="headline-font text-xl font-bold mb-4">ผลการวิเคราะห์ AI</h3>
+    <h3 class="headline-font text-xl font-bold mb-4">เธเธฅเธเธฒเธฃเธงเธดเน€เธเธฃเธฒเธฐเธซเน AI</h3>
     <div id="result-body"></div>
   </section>
 
   <!-- History -->
   <section>
-    <h3 class="headline-font text-xl font-bold mb-4">ประวัติการส่งรูป</h3>
+    <h3 class="headline-font text-xl font-bold mb-4">เธเธฃเธฐเธงเธฑเธ•เธดเธเธฒเธฃเธชเนเธเธฃเธนเธ</h3>
     <div id="history" class="space-y-3"></div>
   </section>
 </main>
 
 <div id="wt-bottomnav"></div>
 
+<script src="/config.js"></script>
 <script src="assets/app.js"></script>
 <script src="assets/layout.js"></script>
 <script>
@@ -83,10 +84,10 @@
       const data = await wt.api.dailySummary(wt.isoDate(new Date()));
       const emps = (data.records || []).map(r => ({ id: r.employee_id, name: r.full_name, code: r.employee_code }));
       const sel = document.getElementById("employee");
-      sel.innerHTML = '<option value="">— เลือกพนักงาน —</option>' +
-        emps.map(e => `<option value="${e.id}">${e.code} — ${e.name}</option>`).join("");
+      sel.innerHTML = '<option value="">โ€” เน€เธฅเธทเธญเธเธเธเธฑเธเธเธฒเธ โ€”</option>' +
+        emps.map(e => `<option value="${e.id}">${e.code} โ€” ${e.name}</option>`).join("");
     } catch (e) {
-      document.getElementById("employee").innerHTML = '<option value="">— โหลดรายชื่อไม่สำเร็จ —</option>';
+      document.getElementById("employee").innerHTML = '<option value="">โ€” เนเธซเธฅเธ”เธฃเธฒเธขเธเธทเนเธญเนเธกเนเธชเธณเน€เธฃเนเธ โ€”</option>';
     }
     loadHistory();
   })();
@@ -109,13 +110,13 @@
     e.preventDefault();
     const employee_id = document.getElementById("employee").value;
     const location    = document.getElementById("location").value;
-    if (!employee_id) { wt.toast("กรุณาเลือกพนักงาน", "error"); return; }
-    if (!imageDataUrl) { wt.toast("กรุณาเลือกรูปภาพ", "error"); return; }
+    if (!employee_id) { wt.toast("เธเธฃเธธเธ“เธฒเน€เธฅเธทเธญเธเธเธเธฑเธเธเธฒเธ", "error"); return; }
+    if (!imageDataUrl) { wt.toast("เธเธฃเธธเธ“เธฒเน€เธฅเธทเธญเธเธฃเธนเธเธ เธฒเธ", "error"); return; }
 
     const card = document.getElementById("result-card");
     const body = document.getElementById("result-body");
     card.classList.remove("hidden");
-    body.innerHTML = `<div class="flex items-center gap-3 text-on-surface-variant"><span class="material-symbols-outlined animate-spin">progress_activity</span> กำลังวิเคราะห์…</div>`;
+    body.innerHTML = `<div class="flex items-center gap-3 text-on-surface-variant"><span class="material-symbols-outlined animate-spin">progress_activity</span> เธเธณเธฅเธฑเธเธงเธดเน€เธเธฃเธฒเธฐเธซเนโ€ฆ</div>`;
 
     try {
       const res = await wt.api.uploadPhoto({
@@ -129,14 +130,14 @@
         <div class="flex items-center gap-4 mb-4">
           <span class="material-symbols-outlined text-5xl ${ok ? 'text-primary' : 'text-error'}">${ok ? 'verified' : 'error'}</span>
           <div>
-            <p class="headline-font text-lg font-extrabold">${ok ? 'ยืนยันตัวตนสำเร็จ' : 'ไม่สามารถยืนยันตัวตน'}</p>
-            <p class="text-sm text-on-surface-variant">สถานะ: ${res.status}</p>
+            <p class="headline-font text-lg font-extrabold">${ok ? 'เธขเธทเธเธขเธฑเธเธ•เธฑเธงเธ•เธเธชเธณเน€เธฃเนเธ' : 'เนเธกเนเธชเธฒเธกเธฒเธฃเธ–เธขเธทเธเธขเธฑเธเธ•เธฑเธงเธ•เธ'}</p>
+            <p class="text-sm text-on-surface-variant">เธชเธ–เธฒเธเธฐ: ${res.status}</p>
           </div>
         </div>
         <div class="space-y-2">
           <div>
             <div class="flex justify-between text-sm font-bold mb-1">
-              <span>ความมั่นใจการจดจำใบหน้า</span><span>${conf}%</span>
+              <span>เธเธงเธฒเธกเธกเธฑเนเธเนเธเธเธฒเธฃเธเธ”เธเธณเนเธเธซเธเนเธฒ</span><span>${conf}%</span>
             </div>
             <div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
               <div class="${ok ? 'bg-primary' : 'bg-error'} h-full" style="width:${conf}%"></div>
@@ -145,11 +146,11 @@
           <p class="text-sm text-on-surface-variant">LIVENESS: ${res.liveness_ok ? 'OK' : 'FAILED'}</p>
           <p class="text-sm text-on-surface-variant">Upload ID: #${res.id}</p>
         </div>`;
-      wt.toast(ok ? "บันทึกสำเร็จ" : "ตรวจสอบผลการวิเคราะห์", ok ? "success" : "error");
+      wt.toast(ok ? "เธเธฑเธเธ—เธถเธเธชเธณเน€เธฃเนเธ" : "เธ•เธฃเธงเธเธชเธญเธเธเธฅเธเธฒเธฃเธงเธดเน€เธเธฃเธฒเธฐเธซเน", ok ? "success" : "error");
       loadHistory();
     } catch (e) {
-      body.innerHTML = `<div class="text-error font-bold">ส่งไม่สำเร็จ: ${e.message}</div>`;
-      wt.toast("ส่งไม่สำเร็จ", "error");
+      body.innerHTML = `<div class="text-error font-bold">เธชเนเธเนเธกเนเธชเธณเน€เธฃเนเธ: ${e.message}</div>`;
+      wt.toast("เธชเนเธเนเธกเนเธชเธณเน€เธฃเนเธ", "error");
     }
   });
 
@@ -159,21 +160,21 @@
     try {
       const items = await wt.api.photoHistory();
       if (!items || !items.length) {
-        el.innerHTML = '<p class="text-on-surface-variant text-sm">ยังไม่มีประวัติ</p>';
+        el.innerHTML = '<p class="text-on-surface-variant text-sm">เธขเธฑเธเนเธกเนเธกเธตเธเธฃเธฐเธงเธฑเธ•เธด</p>';
         return;
       }
       el.innerHTML = items.slice(0, 10).map(h => `
         <div class="bg-surface-container-lowest p-4 rounded-lg flex items-center justify-between">
           <div>
-            <p class="font-bold">${h.full_name || '—'}</p>
-            <p class="text-xs text-on-surface-variant">${new Date(h.uploaded_at).toLocaleString('th-TH')} · ${h.location || ''}</p>
+            <p class="font-bold">${h.full_name || 'โ€”'}</p>
+            <p class="text-xs text-on-surface-variant">${new Date(h.uploaded_at).toLocaleString('th-TH')} ยท ${h.location || ''}</p>
           </div>
           <div class="${h.status === 'matched' ? 'bg-primary/10 text-primary' : 'bg-error-container text-error'} px-3 py-1 rounded-full text-xs font-bold">
-            ${h.status} · ${h.face_confidence || 0}%
+            ${h.status} ยท ${h.face_confidence || 0}%
           </div>
         </div>`).join("");
     } catch (e) {
-      el.innerHTML = `<p class="text-error text-sm">โหลดไม่สำเร็จ: ${e.message}</p>`;
+      el.innerHTML = `<p class="text-error text-sm">เนเธซเธฅเธ”เนเธกเนเธชเธณเน€เธฃเนเธ: ${e.message}</p>`;
     }
   }
 </script>
